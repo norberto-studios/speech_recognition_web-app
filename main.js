@@ -1,20 +1,16 @@
-// Get the toggle button element
-const toggleButton = document.getElementById("toggle-button");
-// Get the result paragraph element
-const resultParagraph = document.getElementById("result");
+$(document).ready(function () {
+    const toggleButton = document.getElementById("toggle-button");
+    // Get the result paragraph element
+    const resultParagraph = document.getElementById("result");    
+    window.SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+    let finalTranscript = '';
+    let recognition = new window.SpeechRecognition();
 
-// Create a SpeechRecognition object
-const recognition = new webkitSpeechRecognition();
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 10;
+    recognition.continuous = true;
+    let isRecognitionRunning = false;
 
-// Set the properties of the SpeechRecognition object
-recognition.continuous = false;
-recognition.interimResults = false;
-recognition.lang = "en-US";
-
-// Set a flag to indicate whether speech recognition is currently running
-let isRecognitionRunning = false;
-
-// Add an event listener to the toggle button
 toggleButton.addEventListener("click", () => {
   if (!isRecognitionRunning) {
     // Start the speech recognition
@@ -22,6 +18,8 @@ toggleButton.addEventListener("click", () => {
     toggleButton.textContent = "Stop Speech Recognition";
     toggleButton.classList.add("stop"); // Add the stop class
     isRecognitionRunning = true;
+    recognition.interimResults = true;
+    recognition.continuous = true;
   } else {
     // Stop the speech recognition
     recognition.stop();
@@ -31,13 +29,16 @@ toggleButton.addEventListener("click", () => {
   }
 });
 
-// Add an event listener for the result event
 recognition.addEventListener("result", (event) => {
-  // Get the transcript from the event results
-  const transcript = event.results[0][0].transcript;
-
-  // Log the transcript to the console
-  console.log(transcript);
-  // Display the transcript on the page
-  resultParagraph.textContent = transcript;
+    let interimTranscript = '';
+    for (let i = event.resultIndex, len = event.results.length; i < len; i++) {
+      let transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript;
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+    resultParagraph.innerHTML = finalTranscript + '<i style="color:#ddd;">' + interimTranscript + '</>';
+});
 });
